@@ -6,20 +6,33 @@ def scanner(der: str):
     i = 0
     while i < len(der):
         c = der[i]
+
         if c.isspace():
             i += 1
-        elif c == '!':
+            continue
+
+        if i + 1 < len(der):
+            two_char = der[i:i+2]
+            if two_char in {'==', '!=', '<=', '>='}:
+                tokens.append(two_char)
+                i += 2
+                continue
+
+        if c == '!':
             tokens.append('!')
             i += 1
+
         elif c.isalpha():
             start = i
             i += 1
             while i < len(der) and (der[i].isalnum() or der[i] in "_'"):
                 i += 1
             tokens.append(der[start:i])
+
         else:
             tokens.append(c)
             i += 1
+
     return tokens
 
 
@@ -190,7 +203,10 @@ def analizar_gramatica(grammar_text: str, input_text: str):
 
         else:
             if cadena[0] not in terminales:
-                FIRST_TOP = [f for f in grammar[pila[-1]]['first'] if f != "!"]
+                FIRST_TOP = []
+                for f in grammar[pila[-1]]['first']:
+                    if f != "!":
+                        FIRST_TOP.append(f)                
                 FOLLOW_TOP = grammar[pila[-1]]['follow']
                 cadena_valida = False
 
@@ -199,8 +215,12 @@ def analizar_gramatica(grammar_text: str, input_text: str):
                     cadena.pop(0)
 
                 elif cadena[0] == "$" and grammar[pila[-1]]['tipo'] in ["I", "V"]:
-                    steps.append({"stack": pila.copy(), "input": cadena.copy(), "action": "Pop: ε (EOF)"})
-                    pila.pop()
+                    if "!" in grammar[pila[-1]]['first']:
+                        cadena_valida = True
+                        prod = tabla[pila[-1]][cadena[0]][0]
+                        prod_str = f"{prod['Izq']} → {' '.join(prod['Der'])}"
+                        steps.append({"stack": pila.copy(), "input": cadena.copy(), "action": f"Regla: {prod_str} Pop: ε (!)"})
+                        pila.pop()
 
                 elif "!" in grammar[pila[-1]]['first'] and (cadena[0] in FOLLOW_TOP or cadena[0] == "$"):
                     steps.append({"stack": pila.copy(), "input": cadena.copy(), "action": f"Error en '{pila[-1]}', EXTRAER"})

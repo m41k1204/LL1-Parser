@@ -2,12 +2,14 @@ from parser import analizar_gramatica
 
 if __name__ == "__main__":
     grammar = """
-    S -> a A
-    A -> b
-    A -> !
+    S   -> if ( E ) S S'
+    S'  -> else S
+    S'  -> !
+    S   -> stmt
+    E   -> id == id
     """
 
-    input_text = "a b c"
+    input_text = "if ( id == id ) stmt else stmt"
 
     resultado = analizar_gramatica(grammar, input_text)
 
