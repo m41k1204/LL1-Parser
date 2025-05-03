@@ -67,8 +67,8 @@ function App() {
             <li> Usar la siguiente flecha: <code>-&gt;</code> para las derivaciones</li>
             <li> Usa <code>!</code> para representar ε (vacío)</li>
             <li> Cada producción en una línea distinta</li>
-            <li> No terminales: letras mayúsculas (A-Z)</li>
-            <li> Terminales: letras minúsculas (a-z)</li>
+            <li> No terminales: deben comenzar con letras mayúsculas (A-Z)</li>
+            <li> Terminales: deben comenzar con letras minúsculas (a-z) o ser simbolos</li>
             <li> Sin símbolo <code>|</code>, usa líneas separadas</li>
             <li> En la esquina inferior derecha del recuadro se puede ajustar la altura del recuadro</li>
           </ul>
