@@ -2,7 +2,21 @@ import { useState } from "react";
 import html2pdf from "html2pdf.js";
 
 function App() {
-  const [grammar, setGrammar] = useState(`Struct  -> struct Nombre { Comps }\nNombre  -> id\nComps   -> Comp Comps'\nComps'  -> ; Comp Comps'\nComps'  -> !\nComp    -> Type id\nType    -> Typep\nType    -> struct id\nType    -> Pointer\nTypep   -> int\nTypep   -> char\nTypep   -> bool\nTypep   -> float\nPointer -> * id`);  
+  const [grammar, setGrammar] = useState(`Struct  -> struct Nombre { Comps }
+Nombre  -> id
+Comps   -> Comp Comps'
+Comps'  -> ; Comp Comps'
+Comps'  -> !
+Comp    -> Type id
+Type    -> Typep
+Type    -> struct id
+Type    -> Pointer
+Typep   -> int
+Typep   -> char
+Typep   -> bool
+Typep   -> float
+Pointer -> * id`);  
+
   const [input, setInput] = useState("struct id { int id ; struct id id ; * id id }");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -26,6 +40,12 @@ function App() {
 
   const handleDownloadPDF = () => {
     const element = document.getElementById("pdf-content");
+
+    // Mostrar temporalmente los elementos solo para PDF
+    document.querySelectorAll(".only-pdf").forEach(el => {
+      el.style.display = "block";
+    });
+
     html2pdf()
       .set({
         margin: 0.5,
@@ -35,11 +55,23 @@ function App() {
         jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
       })
       .from(element)
-      .save();
+      .save()
+      .then(() => {
+        // Ocultar nuevamente tras generar PDF
+        document.querySelectorAll(".only-pdf").forEach(el => {
+          el.style.display = "none";
+        });
+      });
   };
 
   return (
     <div className="container">
+      <style>{`
+        .only-pdf {
+          display: none;
+        }
+      `}</style>
+
       <h1>LL(1) Parser</h1>
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: "2rem" }}>
@@ -89,6 +121,15 @@ function App() {
 
       {result && (
         <div id="pdf-content">
+          <div className="only-pdf">
+            <h2>Gramática utilizada</h2>
+            <pre style={{ background: "#f4f4f4", padding: "1rem", fontFamily: "monospace" }}>
+              {grammar}
+            </pre>
+
+            
+          </div>
+
           <h2>First & Follow</h2>
           <table>
             <thead>
@@ -108,7 +149,14 @@ function App() {
               ))}
             </tbody>
           </table>
+          
 
+          <div className="only-pdf">
+            <h2>Cadena de entrada</h2>
+            <p style={{ fontFamily: "monospace", fontSize: "16px" }}>{input}</p>
+
+          </div>
+          
           <h2>Análisis paso a paso</h2>
           <table>
             <thead>
@@ -136,7 +184,7 @@ function App() {
       )}
 
       <footer style={{ marginTop: "3rem", textAlign: "center", fontSize: "14px", color: "#555" }}>
-        Creado por <strong>Michael Hinojosa</strong>   UTEC - 2025
+        Creado por <strong>Michael Hinojosa</strong> — UTEC 2025
       </footer>
     </div>
   );
