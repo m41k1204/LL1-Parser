@@ -1,26 +1,38 @@
 import re
 import json
 
-
-def tokenizar(rhs: str):
+def scanner(der: str):
     tokens = []
     i = 0
-    while i < len(rhs):
-        c = rhs[i]
+    while i < len(der):
+        c = der[i]
+
         if c.isspace():
             i += 1
-        elif c == '!':
+            continue
+
+        if i + 1 < len(der):
+            two_char = der[i:i+2]
+            if two_char in {'==', '!=', '<=', '>='}:
+                tokens.append(two_char)
+                i += 2
+                continue
+
+        if c == '!':
             tokens.append('!')
             i += 1
+
         elif c.isalpha():
             start = i
             i += 1
-            while i < len(rhs) and (rhs[i].isalnum() or rhs[i] in "_'"):
+            while i < len(der) and (der[i].isalnum() or der[i] in "_'"):
                 i += 1
-            tokens.append(rhs[start:i])
+            tokens.append(der[start:i])
+
         else:
             tokens.append(c)
             i += 1
+
     return tokens
 
 
@@ -42,12 +54,10 @@ reglas = {}
 for i in range(len(sent)):
     partes = sent[i].split("->", 1)
     print("partes: ", partes)
-    lhs = partes[0].strip()
-    rhs = partes[1]
+    izq = partes[0].strip() 
+    der = scanner(partes[1])
 
-    der = tokenizar(rhs)
-
-    reglas["regla" + str(i+1)] = {"Izq": lhs, "Der": der}
+    reglas["regla" + str(i+1)] = {"Izq": izq, "Der": der}
 
 
 start = sent[0].split("->",1)[0].strip()
@@ -55,9 +65,9 @@ start_list = [ start ]
 
 variables = set()
 for regla in reglas.values():
-    lhs = regla["Izq"]
-    if lhs != start:
-        variables.add(lhs)
+    izq = regla["Izq"]
+    if izq != start:
+        variables.add(izq)
 
 for regla in reglas.values():
     for sym in regla["Der"]:
@@ -281,9 +291,13 @@ while True:
                 print(f"{pila_str:<30}{entrada_str:<60}Error terminal, EXPLORAR '{cadena[0]}'")
                 cadena.pop(0)
             
-            elif cadena[0] == "$" and grammar[pila[-1]]["tipo"] in ["I","V"]:
-                print(f"{pila_str:<30}{entrada_str:<60}Pop: ε (EOF)")  
-                pila.pop()                                            
+            elif cadena[0] == "$" and grammar[pila[-1]]['tipo'] in ["I", "V"]:
+                if "!" in grammar[pila[-1]]['first']:
+                    cadena_valida = True
+                    prod = tabla[pila[-1]][cadena[0]][0]
+                    prod_str = f"{prod['Izq']} → {' '.join(prod['Der'])}"
+                    print(f"{pila_str:<30} {entrada_str:<60} Regla: {prod_str} Pop: ε (!)")
+                    pila.pop()                                            
 
             #EXTRAER
             elif "!" in grammar[pila[-1]]['first'] and (cadena[0] in FOLLOW_TOP or cadena[0] == "$"):
