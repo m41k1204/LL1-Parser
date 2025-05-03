@@ -208,15 +208,15 @@ def analizar_gramatica(grammar_text: str, input_text: str):
                     if f != "!":
                         FIRST_TOP.append(f)                
                 FOLLOW_TOP = grammar[pila[-1]]['follow']
-                cadena_valida = False
+                
 
                 if grammar[pila[-1]]["tipo"] == "T":
                     steps.append({"stack": pila.copy(), "input": cadena.copy(), "action": f"Error terminal, EXPLORAR '{cadena[0]}'"})
                     cadena.pop(0)
+                    cadena_valida = False
 
                 elif cadena[0] == "$" and grammar[pila[-1]]['tipo'] in ["I", "V"]:
                     if "!" in grammar[pila[-1]]['first']:
-                        cadena_valida = True
                         prod = tabla[pila[-1]][cadena[0]][0]
                         prod_str = f"{prod['Izq']} → {' '.join(prod['Der'])}"
                         steps.append({"stack": pila.copy(), "input": cadena.copy(), "action": f"Regla: {prod_str} Pop: ε (!)"})
@@ -225,12 +225,14 @@ def analizar_gramatica(grammar_text: str, input_text: str):
                 elif "!" in grammar[pila[-1]]['first'] and (cadena[0] in FOLLOW_TOP or cadena[0] == "$"):
                     steps.append({"stack": pila.copy(), "input": cadena.copy(), "action": f"Error en '{pila[-1]}', EXTRAER"})
                     pila.pop()
+                    cadena_valida = False
 
                 elif cadena[0] not in FIRST_TOP and cadena[0] not in FOLLOW_TOP and cadena[0] != "$":
                     steps.append({"stack": pila.copy(), "input": cadena.copy(), "action": f"Error en '{pila[-1]}', EXPLORAR"})
                     while cadena and cadena[0] not in FIRST_TOP + FOLLOW_TOP + ["$"]:
                         steps.append({"stack": pila.copy(), "input": cadena.copy(), "action": f"Skip '{cadena[0]}'"})
                         cadena.pop(0)
+                    cadena_valida = False
 
             elif grammar[pila[-1]]['tipo'] in ["I", "V"] and tabla[pila[-1]][cadena[0]]:
                 prod = tabla[pila[-1]][cadena[0]][0]
