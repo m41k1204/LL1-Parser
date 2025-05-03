@@ -1,0 +1,16 @@
+Struct  -> struct Nombre { Comps }  
+Nombre  -> id  
+Comps   -> Comp Comps'  
+Comps'  -> ; Comp Comps'  
+Comps'  -> !         
+Comp    -> Type id  
+Type    -> Typep  
+Type    -> struct id  
+Type    -> Pointer  
+Typep   -> int  
+Typep   -> char  
+Typep   -> bool  
+Typep   -> float  
+Pointer -> * id  
+
+

@@ -1,7 +1,7 @@
 import re
 import json
 
-archivo = open("grammar.txt","r")
+archivo = open("grammar-3.txt","r")
 sent = archivo.readlines()
 
 print("Gramatica: ")
@@ -45,7 +45,7 @@ for j in variables:
     grammar[j]={"tipo":"V","first":[],"follow":[]}
 
 
-archivo = open("grammar.txt","r")
+archivo = open("grammar-3.txt","r")
 sent = archivo.readlines()
 reglas ={}
 
@@ -119,10 +119,8 @@ for g in range(len(sent)):
                 if vacio and "!" not in grammar[i]['first']:
                     grammar[i]['first'].append("!")
 
-# imprimir_tabla()
 
 ## ---------------------------------- Calculo de los FOLLOWS ------------------------------------------
-
 
 for i in reglas.keys():
     for j in range(len(reglas[i]['Der'])-1):
@@ -138,19 +136,11 @@ for i in reglas.keys():
                             grammar[reglas[i]['Der'][j]]["follow"].append(k)
                 l+=1    
 
-# imprimir_tabla()  
-# print("Grammar")
-# print(grammar)
-# print("\n")
 for i in reglas.keys():
     if grammar[reglas[i]['Der'][-1]]['tipo'] == "V":
         for j in grammar[reglas[i]['Izq']]['follow']: 
             if j not in grammar[reglas[i]['Der'][-1]]["follow"]:  
                 grammar[reglas[i]['Der'][-1]]["follow"].append(j)
-
-# imprimir_tabla()
-# print("Grammar")
-# print(grammar)
 
 
 for i in reglas.keys():
@@ -162,31 +152,51 @@ for i in reglas.keys():
                     puede_vaciarse = False
                     break
 
-                if puede_vaciarse:
-                    for l in grammar[reglas[i]['Izq']]['follow']:
-                        if l not in grammar[reglas[i]['Der'][j]]['follow']:
-                            grammar[reglas[i]['Der'][j]]['follow'].append(l)
+            if puede_vaciarse:
+                for l in grammar[reglas[i]['Izq']]['follow']:
+                    if l not in grammar[reglas[i]['Der'][j]]['follow']:
+                        grammar[reglas[i]['Der'][j]]['follow'].append(l)
+
+for i in reglas.keys():
+    for j in range(len(reglas[i]['Der']) - 1):
+        if grammar[reglas[i]['Der'][j]]['tipo'] in ['I','V'] and reglas[i]['Der'][j+1] in terminales:
+            if reglas[i]['Der'][j+1] not in grammar[reglas[i]['Der'][j]]['follow']:
+                grammar[reglas[i]['Der'][j]]['follow'].append(reglas[i]['Der'][j+1])
+
 
 
 ## Tabla LL1 
 
+if "!" in terminales:
+    terminales.remove("!")
+
 tabla = {}
-
 for i in start + variables:
-    tabla[i]={}
-    for j in terminales:
-        tabla[i][j]=[]
-    tabla[i]["$"]=[]
+    tabla[i] = {}
+    for t in terminales + ["$"]:
+        tabla[i][t] = [] 
 
-for i in reglas.keys():
-    for j in  grammar[reglas[i]['Der'][0]]['first']:
-        tabla[reglas[i]['Izq'][0]][j].append(reglas[i])
+for regla in reglas.values():
+    izq = regla['Izq']
+    der = regla['Der']
 
+    first_der = set()
+    puede_vaciarse = True
+    for i in der:
+        for f in grammar[i]['first']:
+            if f != "!":
+                first_der.add(f)
+        if "!" not in grammar[i]['first']:
+            puede_vaciarse = False
+            break
 
-print("\n")
-print("REGLAS")
-print(reglas)
-print("\n")
+    for i in first_der:
+        tabla[izq][i].append(regla)
+
+    if puede_vaciarse:
+        for i in grammar[izq]['follow']:
+            tabla[izq][i].append(regla)
+
 
 
 #################
@@ -218,35 +228,77 @@ for no_terminal, reglas in tabla.items():
     print()
 
 
-# ###########
-# code = open("input.txt","r")
-# sent = code.readlines()
+###########
+code = open("input-3.txt","r")
+sent = code.readlines()
 
-# cadena = sent[0]+"$"
-# pila = start
+cadena = sent[0]+"$"
+pila = start
 
-# ##################
-# print("\n")
-# print("\n")
-# print("ANALISIS")
+##################
+print("\n")
+print("\n")
+print("ANALISIS")
 
-# while True:
-#     pila_str = ' '.join(pila)
-#     entrada_str = ''.join(cadena)
-#     if (len(cadena)==1) and (len(pila)==0):
-#         print("CADENA VALIDA")
-#         break
-#     if (grammar[pila[-1]]["tipo"] in ["I","V"]) and (len(tabla[pila[-1]][cadena[0]])>=1):
-#         produccion = tabla[pila[-1]][cadena[0]][0]
-#         produccion_str = f"{produccion['Izq']} → {' '.join(produccion['Der'])}"
-#         print(f"{pila_str:<30} {entrada_str:<30} {'Regla: ' + produccion_str}")
-#         a = pila[-1]
-#         pila.pop()
-#         pila+=tabla[a][cadena[0]][0]['Der'][::-1]
-#     elif (grammar[pila[-1]]["tipo"]=="T") and pila[-1]==cadena[0]:
-#         print(f"{pila_str:<30} {entrada_str:<30} {'Match: ' + cadena[0]}")
-#         pila.pop()
-#         cadena = cadena[1:] 
-#     else:
-#         print("Cadena no valida")
-#         break
+cadena_valida = True
+while True:
+    pila_str    = ' '.join(pila)
+    entrada_str = ''.join(cadena)
+
+    if len(cadena) == 1 and not pila:
+        break
+
+    if pila and pila[-1] == "!":
+        print(f"{pila_str:<30} {entrada_str:<30} Pop: ε")
+        pila.pop()
+        
+    else:
+        if cadena[0] not in terminales:
+            cadena_valida = False
+
+            FIRST_TOP  = set(grammar[pila[-1]]["first"]) - {"!"}
+            FOLLOW_TOP = set(grammar[pila[-1]].get("follow", []))
+
+            #EXTRAER
+            if "!" in grammar[pila[-1]]["first"] and (cadena[0] in FOLLOW_TOP or cadena[0] == "$"):
+                print(f"{pila_str:<30} {entrada_str:<30} Error en '{pila[-1]}', EXTRAER")
+                pila.pop()
+                
+
+            #EXTRAER
+            elif cadena[0] in FIRST_TOP:
+                print(f"{pila_str:<30} {entrada_str:<30} Error en '{pila[-1]}', EXTRAER")
+                pila.pop()
+                
+            
+            #EXPLORAR
+            elif cadena[0] not in FIRST_TOP and cadena[0] not in FOLLOW_TOP and cadena[0] != "$":
+                print(f"{pila_str:<30} {entrada_str:<30} Error en '{pila[-1]}', EXPLORAR")
+                while cadena and cadena[0] not in FIRST_TOP and cadena[0] not in FOLLOW_TOP and cadena[0] != "$":
+                    print(f"{'':30} {'':30} EXPLORAR '{cadena[0]}'")
+                    cadena = cadena[1:]
+                
+        elif grammar[pila[-1]]["tipo"] in ["I","V"] and tabla[pila[-1]][cadena[0]]:
+            prod = tabla[pila[-1]][cadena[0]][0]
+            prod_str = f"{prod['Izq']} → {' '.join(prod['Der'])}"
+            print(f"{pila_str:<30} {entrada_str:<30} Regla: {prod_str}")
+            pila.pop()
+            if prod['Der'] != ["!"]:
+                for X in reversed(prod['Der']):
+                    pila.append(X)
+
+        elif grammar[pila[-1]]["tipo"] == "T" and pila[-1] == cadena[0]:
+            print(f"{pila_str:<30} {entrada_str:<30} Match: {cadena[0]}")
+            pila.pop()
+            cadena = cadena[1:]
+
+        #EXTRAER
+        else: 
+            cadena_valida = False
+            print(f"{pila_str:<30} {entrada_str:<30} Error en '{pila[-1]}', EXTRAER")
+            pila.pop()
+
+if cadena_valida:
+    print("CADENA VALIDA")
+else:
+    print("CADENA INVALIDA")
