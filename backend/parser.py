@@ -76,6 +76,7 @@ def analizar_gramatica(grammar_text: str, input_text: str):
 
     ## ---------------------------------- Calcular los FIRST ------------------------------------------
 
+
     def nuevos_first(indice, regla, grammar):
         firsts = grammar[regla[indice]]['first']
         nuevos = [i for i in firsts if i != "!"]
@@ -85,6 +86,7 @@ def analizar_gramatica(grammar_text: str, input_text: str):
         if grammar[i]['tipo'] == "T":
             grammar[i]['first'].append(i)
 
+    # Hay firsts que requieren de otros firsts y hay len(sent) dependencias por lo que la fuerza bruta es iterar len(sent) veces
     for g in range(len(sent)):
         for i in grammar.keys():
             for k in reglas.keys():
@@ -107,6 +109,7 @@ def analizar_gramatica(grammar_text: str, input_text: str):
 
     ## ---------------------------------- Calculo de los FOLLOWS ------------------------------------------
 
+    # Hay follows que requieren de otros follows y hay len(sent) dependencias por lo que la fuerza bruta es iterar len(sent) veces
     for g in range(len(sent)):
         for i in reglas.keys():
             for j in range(len(reglas[i]['Der']) - 1):
