@@ -1,0 +1,19 @@
+meta {
+  name: analize
+  type: http
+  seq: 2
+}
+
+post {
+  url: https://j01bcknqpc.execute-api.us-east-1.amazonaws.com/dev/analyze
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "grammar": "S -> a A\nA -> b\nA -> !",
+    "input": "a b a"
+  }
+  
+}

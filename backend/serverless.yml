@@ -1,0 +1,22 @@
+org: m41k1204
+service: ll1-parser-lambda
+
+provider:
+  name: aws
+  runtime: python3.10
+  region: us-east-1
+  stage: dev
+  timeout: 20
+
+functions:
+  analyze:
+    handler: lambda.analyze
+    events:
+      - http:
+          path: analyze
+          method: post
+          cors: true
+      - http:
+          path: analyze
+          method: options
+          cors: true # 👈 esto define explícitamente el OPTIONS

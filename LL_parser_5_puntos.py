@@ -2,7 +2,7 @@ import re
 import json
 
 
-def tokenize_rhs(rhs: str):
+def tokenizar(rhs: str):
     tokens = []
     i = 0
     while i < len(rhs):
@@ -45,7 +45,7 @@ for i in range(len(sent)):
     lhs = partes[0].strip()
     rhs = partes[1]
 
-    der = tokenize_rhs(rhs)
+    der = tokenizar(rhs)
 
     reglas["regla" + str(i+1)] = {"Izq": lhs, "Der": der}
 
